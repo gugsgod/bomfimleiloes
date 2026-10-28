@@ -1,0 +1,48 @@
+// Bomfim Leilões — catálogo de produtos
+// Banco: PostgreSQL (Supabase em produção).
+//
+// Observações de portabilidade:
+// - `status` é uma String (AVAILABLE | RESERVED | SOLD) em vez de enum nativo,
+//   o que mantém o schema simples e fácil de migrar para outros bancos SQL.
+// - `priceCents` guarda o preço em centavos (inteiro) para evitar erros de
+//   arredondamento de ponto flutuante.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Product {
+  id          String         @id @default(cuid())
+  title       String
+  description String
+  priceCents  Int
+  status      String         @default("AVAILABLE")
+  published   Boolean        @default(true)
+  images      ProductImage[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([published, createdAt])
+}
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  path      String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+}
+
+model Setting {
+  key   String @id
+  value String
+}
